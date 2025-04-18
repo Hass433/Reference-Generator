@@ -1,11 +1,14 @@
+from typing import Dict, Any, List, Optional
 import json
-from typing import Dict, Any
+import difflib
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import AzureChatOpenAI
 from models.criteria import CustomerCriteria
 from config.settings import settings
 from utils.logger import logger, log_json  
+from config.static_lists import ERP_SYSTEMS, INDUSTRIES, PRODUCT_ACTIVATIONS
+
 
 llm = AzureChatOpenAI(
     api_key=settings.AZURE_OPENAI_API_KEY,
@@ -14,6 +17,28 @@ llm = AzureChatOpenAI(
     deployment_name=settings.AZURE_OPENAI_DEPLOYMENT,
     temperature=0
 )
+
+def find_best_match(input_value: str, possible_values: List[str]) -> Optional[str]:
+    """Find the best match for the input value in the list of possible values."""
+    if not input_value or not possible_values:
+        return None
+        
+    # Convert input to lowercase for case-insensitive matching
+    input_lower = input_value.lower()
+    
+    # Try exact match first (case insensitive)
+    for value in possible_values:
+        if value.lower() == input_lower:
+            return value
+    
+    # Try to find the closest match
+    matches = difflib.get_close_matches(input_lower, [v.lower() for v in possible_values], n=1, cutoff=0.6)
+    if matches:
+        # Find the original case version
+        match_index = [v.lower() for v in possible_values].index(matches[0])
+        return possible_values[match_index]
+    
+    return None
 
 def clean_json_response(response: str) -> Dict[str, Any]:
     """Clean the JSON response by removing markdown code blocks."""
@@ -73,6 +98,31 @@ def parse_criteria(prompt: str) -> CustomerCriteria:
     try:
         json_data = clean_json_response(json_response)
         log_json(json_data, "Parsed criteria")
+        
+        # Apply fuzzy matching to ERP system, industry, and product activations
+        if 'erp_system' in json_data and json_data['erp_system']:
+            best_match = find_best_match(json_data['erp_system'], ERP_SYSTEMS)
+            if best_match:
+                json_data['erp_system'] = best_match
+                logger.info(f"Mapped ERP system to '{best_match}'")
+            else:
+                logger.warning(f"No close match found for ERP system '{json_data['erp_system']}'")
+        
+        if 'industry' in json_data and json_data['industry']:
+            best_match = find_best_match(json_data['industry'], INDUSTRIES)
+            if best_match:
+                json_data['industry'] = best_match
+                logger.info(f"Mapped industry to '{best_match}'")
+            else:
+                logger.warning(f"No close match found for industry '{json_data['industry']}'")
+        
+        if 'product_activations' in json_data and json_data['product_activations']:
+            best_match = find_best_match(json_data['product_activations'], PRODUCT_ACTIVATIONS)
+            if best_match:
+                json_data['product_activations'] = best_match
+                logger.info(f"Mapped product activations to '{best_match}'")
+            else:
+                logger.warning(f"No close match found for product activations '{json_data['product_activations']}'")
         
         criteria = CustomerCriteria(**json_data)
         logger.info(f"Successfully created criteria object: {criteria}")
