@@ -6,20 +6,6 @@ from utils.formatter import format_results, get_formatted_dataframe
 from utils.logger import logger
 from typing import List, Dict, Tuple
 
-def initialize_session_state():
-    """Initialize or reset session state"""
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        st.session_state.raw_results = {}
-        st.session_state.soql_queries = {}
-        st.session_state.message_types = {}  # Add this to track message types
-        st.session_state.messages.append({
-            "role": "assistant", 
-            "content": f"👋 Hi! I'm your Customer Reference Assistant.\n\n{get_capabilities_message()}"
-        })
-        st.session_state.message_types[0] = "text"  # The welcome message is text
-
-# Update the customer_reference_agent function to return the type
 def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str, str]:
     """Core agent function that returns formatted results, raw data, SOQL query and message type"""
     logger.info(f"Processing prompt: '{prompt}'")
@@ -33,7 +19,6 @@ def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str, str]:
     else:
         return format_results(results), results, soql_query, "table"
 
-# Update display_chat_message to use the message type
 def display_chat_message(role: str, content: str, message_idx: int, expandable_content: str = None):
     """Display a chat message with optional expandable content"""
     with st.chat_message(role):
@@ -118,10 +103,12 @@ def initialize_session_state():
         st.session_state.messages = []
         st.session_state.raw_results = {}
         st.session_state.soql_queries = {}
+        st.session_state.message_types = {}  # Add this to track message types
         st.session_state.messages.append({
             "role": "assistant", 
             "content": f"👋 Hi! I'm your Customer Reference Assistant.\n\n{get_capabilities_message()}"
         })
+        st.session_state.message_types[0] = "text"  # The welcome message is text
 
 def main():
     st.set_page_config(
@@ -163,16 +150,18 @@ def main():
                 if general_response is not None:
                     response = general_response
                     soql_query = None
+                    message_type = "text"
                 # Then check if it's a data query
                 elif is_data_query(prompt):
                     # Process data query
-                    formatted_results, raw_results, soql_query = customer_reference_agent(prompt)
+                    formatted_results, raw_results, soql_query, message_type = customer_reference_agent(prompt)
                     response = formatted_results
                     
                     # Store raw data and query for this message index
                     idx = len(st.session_state.messages)
                     st.session_state.raw_results[idx] = raw_results
                     st.session_state.soql_queries[idx] = soql_query
+                    st.session_state.message_types[idx] = message_type
                 else:
                     # Default response for unrecognized queries
                     response = (
@@ -184,12 +173,17 @@ def main():
                         "Or ask 'What can you do?' to see my capabilities."
                     )
                     soql_query = None
+                    message_type = "text"
                 
                 # Add assistant response
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": response
                 })
+                
+                # Store message type for the assistant's response
+                idx = len(st.session_state.messages) - 1
+                st.session_state.message_types[idx] = message_type
                 
                 # Rerun to update display
                 st.rerun()
@@ -207,22 +201,10 @@ def main():
                     "role": "assistant", 
                     "content": error_msg
                 })
+                # Mark error message as text type
+                idx = len(st.session_state.messages) - 1
+                st.session_state.message_types[idx] = "text"
                 st.rerun()
-
-    # When processing the query, store the message type
-    if is_data_query(prompt):
-        # Process data query
-        formatted_results, raw_results, soql_query, message_type = customer_reference_agent(prompt)
-        response = formatted_results
-        
-        # Store raw data, query and message type for this message index
-        idx = len(st.session_state.messages)
-        st.session_state.raw_results[idx] = raw_results
-        st.session_state.soql_queries[idx] = soql_query
-        st.session_state.message_types[idx] = message_type
-
-
 
 if __name__ == "__main__":
     main()
-
