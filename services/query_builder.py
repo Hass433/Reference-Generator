@@ -10,7 +10,7 @@ def build_soql_query(criteria: CustomerCriteria) -> str:
     SELECT {', '.join(FIELD_MAPPING.values())}
     FROM Usage_statistic__c
     WHERE {FIELD_MAPPING['is_latest']} = true
-    AND {FIELD_MAPPING['customer_type']} = 'Customer'
+    AND {FIELD_MAPPING['type_customer']} = 'Customer'
     """
     
     conditions = []
