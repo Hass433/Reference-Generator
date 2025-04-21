@@ -6,8 +6,22 @@ from utils.formatter import format_results, get_formatted_dataframe
 from utils.logger import logger
 from typing import List, Dict, Tuple
 
-def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str]:
-    """Core agent function that returns formatted results, raw data, and SOQL query"""
+def initialize_session_state():
+    """Initialize or reset session state"""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        st.session_state.raw_results = {}
+        st.session_state.soql_queries = {}
+        st.session_state.message_types = {}  # Add this to track message types
+        st.session_state.messages.append({
+            "role": "assistant", 
+            "content": f"👋 Hi! I'm your Customer Reference Assistant.\n\n{get_capabilities_message()}"
+        })
+        st.session_state.message_types[0] = "text"  # The welcome message is text
+
+# Update the customer_reference_agent function to return the type
+def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str, str]:
+    """Core agent function that returns formatted results, raw data, SOQL query and message type"""
     logger.info(f"Processing prompt: '{prompt}'")
     criteria = parse_criteria(prompt)
     soql_query = build_soql_query(criteria)
@@ -15,18 +29,21 @@ def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str]:
     
     # Format results differently based on whether we found matches
     if not results:
-        return "No customers found matching your criteria.", [], soql_query
+        return "No customers found matching your criteria.", [], soql_query, "text"
     else:
-        return format_results(results), results, soql_query
+        return format_results(results), results, soql_query, "table"
 
-def display_chat_message(role: str, content: str, expandable_content: str = None):
+# Update display_chat_message to use the message type
+def display_chat_message(role: str, content: str, message_idx: int, expandable_content: str = None):
     """Display a chat message with optional expandable content"""
     with st.chat_message(role):
-        # If this is a tabular result, display it properly
-        if content and content.strip().startswith("Tenant") and "\n" in content:
+        # Get the message type
+        message_type = st.session_state.message_types.get(message_idx, "text")
+        
+        # If this is a table result, display it properly
+        if message_type == "table":
             try:
                 # Get the raw results for this message
-                message_idx = len(st.session_state.messages) - 1
                 raw_results = st.session_state.raw_results.get(message_idx, [])
                 
                 # If we have raw results, convert to DataFrame
@@ -42,7 +59,7 @@ def display_chat_message(role: str, content: str, expandable_content: str = None
             except Exception as e:
                 logger.error(f"Error displaying table: {str(e)}", exc_info=True)
                 # Fall back to text display if there's an error
-                
+        
         # Standard text display
         st.markdown(content)
         if expandable_content:
@@ -130,6 +147,7 @@ def main():
         display_chat_message(
             message["role"], 
             message["content"],
+            i,  # Pass the message index
             expandable_content=expandable
         )
     
@@ -191,7 +209,17 @@ def main():
                 })
                 st.rerun()
 
-
+    # When processing the query, store the message type
+    if is_data_query(prompt):
+        # Process data query
+        formatted_results, raw_results, soql_query, message_type = customer_reference_agent(prompt)
+        response = formatted_results
+        
+        # Store raw data, query and message type for this message index
+        idx = len(st.session_state.messages)
+        st.session_state.raw_results[idx] = raw_results
+        st.session_state.soql_queries[idx] = soql_query
+        st.session_state.message_types[idx] = message_type
 
 
 
