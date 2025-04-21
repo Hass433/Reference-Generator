@@ -32,7 +32,7 @@ def find_best_match(input_value: str, possible_values: List[str]) -> Optional[st
             return value
     
     # Try to find the closest match
-    matches = difflib.get_close_matches(input_lower, [v.lower() for v in possible_values], n=1, cutoff=0.6)
+    matches = difflib.get_close_matches(input_lower, [v.lower() for v in possible_values], n=1, cutoff=0.8)
     if matches:
         # Find the original case version
         match_index = [v.lower() for v in possible_values].index(matches[0])
