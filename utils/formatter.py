@@ -14,7 +14,13 @@ def get_nested_value(data: dict, field_path: str, default="N/A"):
 
 def format_results(results: list[dict]) -> str:
     if not results:
-        return "No customers found matching your criteria."
+        columns = [
+            "Tenant", "Account Owner", "Industry", "PO %", "Non-PO %", 
+            "PO Touchless %", "Auto Dist %", "Invoice Volume", 
+            "ERP System", "Product Activations", "Account URL"
+        ]
+        df = pd.DataFrame(columns=columns)
+        return df.to_string(index=False)
     
     # Prepare data for DataFrame
     formatted_data = []
