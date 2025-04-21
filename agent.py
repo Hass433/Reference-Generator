@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from services.parser import parse_criteria
 from services.query_builder import build_soql_query
 from services.query_executor import query_salesforce
