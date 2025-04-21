@@ -1,45 +1,49 @@
 import streamlit as st
-import pandas as pd
 from services.parser import parse_criteria
 from services.query_builder import build_soql_query
 from services.query_executor import query_salesforce
 from utils.formatter import format_results, get_formatted_dataframe
 from utils.logger import logger
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple
 
-def customer_reference_agent(prompt: str) -> Tuple[Union[str, pd.DataFrame], List[Dict], str]:
+def customer_reference_agent(prompt: str) -> Tuple[str, List[Dict], str]:
     """Core agent function that returns formatted results, raw data, and SOQL query"""
     logger.info(f"Processing prompt: '{prompt}'")
     criteria = parse_criteria(prompt)
     soql_query = build_soql_query(criteria)
     results = query_salesforce(soql_query)
     
+    # Format results differently based on whether we found matches
     if not results:
         return "No customers found matching your criteria.", [], soql_query
     else:
         return format_results(results), results, soql_query
 
-def display_chat_message(role: str, content: Union[str, pd.DataFrame], expandable_content: str = None):
+def display_chat_message(role: str, content: str, expandable_content: str = None):
     """Display a chat message with optional expandable content"""
     with st.chat_message(role):
-        # Handle "no results" case
-        if content == "No customers found matching your criteria.":
-            st.warning(content)
-            if expandable_content:
-                with st.expander("View Query Details"):
-                    st.code(expandable_content, language="sql")
-            return
-            
-        # Handle DataFrame case
-        if isinstance(content, pd.DataFrame):
-            if not content.empty:
-                st.dataframe(content, use_container_width=True)
-                if expandable_content:
-                    with st.expander("View Query Details"):
-                        st.code(expandable_content, language="sql")
-            return
-            
-        # Handle string messages (fallback)
+        # If this is a tabular result, display it properly
+        if content and content.strip().startswith("Tenant") and "\n" in content:
+            try:
+                # Get the raw results for this message
+                message_idx = len(st.session_state.messages) - 1
+                raw_results = st.session_state.raw_results.get(message_idx, [])
+                
+                # If we have raw results, convert to DataFrame
+                if raw_results:
+                    df = get_formatted_dataframe(raw_results)
+                    if not df.empty:
+                        st.dataframe(df, use_container_width=True)
+                        
+                        if expandable_content:
+                            with st.expander("View Query Details"):
+                                st.code(expandable_content, language="sql")
+                        return
+            except Exception as e:
+                logger.error(f"Error displaying table: {str(e)}", exc_info=True)
+                # Fall back to text display if there's an error
+                
+        # Standard text display
         st.markdown(content)
         if expandable_content:
             with st.expander("View Query Details"):
@@ -187,5 +191,10 @@ def main():
                 })
                 st.rerun()
 
+
+
+
+
 if __name__ == "__main__":
     main()
+
