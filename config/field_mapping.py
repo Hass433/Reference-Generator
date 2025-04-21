@@ -16,7 +16,7 @@ FIELD_MAPPING = {
     "account_url_link": "Account__r.Account_URL_Link__c",
 
     "is_latest": "IsLatest__c",
-    "type_customer": "Account__r.Type"
+    "customer_type": "Account__r.Type"
 
 
 
