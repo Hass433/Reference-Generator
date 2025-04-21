@@ -4,7 +4,7 @@ from services.query_builder import build_soql_query
 from services.query_executor import query_salesforce
 from utils.formatter import format_results, get_formatted_dataframe
 from utils.logger import logger
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 
 def customer_reference_agent(prompt: str) -> Tuple[Union[str, pd.DataFrame], List[Dict], str]:
     """Core agent function that returns formatted results, raw data, and SOQL query"""
