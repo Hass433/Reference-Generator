@@ -32,7 +32,7 @@ def find_best_match(input_value: str, possible_values: List[str]) -> Optional[st
             return value
     
     # Try to find the closest match
-    matches = difflib.get_close_matches(input_lower, [v.lower() for v in possible_values], n=1, cutoff=0.8)
+    matches = difflib.get_close_matches(input_lower, [v.lower() for v in possible_values], n=1, cutoff=0.6)
     if matches:
         # Find the original case version
         match_index = [v.lower() for v in possible_values].index(matches[0])
@@ -55,6 +55,11 @@ def clean_json_response(response: str) -> Dict[str, Any]:
 def parse_criteria(prompt: str) -> CustomerCriteria:
     logger.info(f"Starting criteria parsing for prompt: '{prompt}'")
     
+    # Format the static lists for inclusion in the prompt
+    erp_list = "\n".join([f"- {erp}" for erp in sorted(ERP_SYSTEMS)])
+    industry_list = "\n".join([f"- {industry}" for industry in sorted(INDUSTRIES)])
+    product_list = "\n".join([f"- {product}" for product in sorted(PRODUCT_ACTIVATIONS)])
+    
     parser_prompt = ChatPromptTemplate.from_template("""
     Extract the following parameters from the user's request. Return only a JSON object with the extracted values.
     
@@ -70,6 +75,15 @@ def parse_criteria(prompt: str) -> CustomerCriteria:
     - "value": The numeric value
     - "operator": One of "=", "<", "<=", ">", ">=" based on the user's intent
     
+    Available ERP Systems (must match exactly one of these):
+    {erp_systems}
+    
+    Available Industries (must match exactly one of these):
+    {industries}
+    
+    Available Product Activations (must match exactly one of these):
+    {product_activations}
+    
     Parameters to extract:
     - account_owner_text: Account owner name
     - tenant: Name of the customer
@@ -78,9 +92,9 @@ def parse_criteria(prompt: str) -> CustomerCriteria:
     - non_po_percentage: Percentage of non-PO invoices with comparison operator (0-100)
     - po_touchless_percentage: Percentage of touchless POs with comparison operator (0-100)
     - automatic_distribution: Percentage of automatic distribution with comparison operator (0-100)
-    - erp_system: The ERP system used by the customer
-    - industry: The industry of the customer (e.g., manufacturing, retail)
-    - product_activations: Product activations
+    - erp_system: The ERP system used by the customer (must match one from the ERP list above)
+    - industry: The industry of the customer (must match one from the Industries list above)
+    - product_activations: Product activations (must match one from the Product Activations list above)
     - limit: Number of results to return (default 5, max 20)
     
     Return ONLY valid JSON. Do not include any additional text or explanation.
@@ -93,7 +107,12 @@ def parse_criteria(prompt: str) -> CustomerCriteria:
     """)
     
     parser_chain = parser_prompt | llm | StrOutputParser()
-    json_response = parser_chain.invoke({"prompt": prompt})
+    json_response = parser_chain.invoke({
+        "prompt": prompt,
+        "erp_systems": erp_list,
+        "industries": industry_list,
+        "product_activations": product_list
+    })
     
     try:
         json_data = clean_json_response(json_response)
