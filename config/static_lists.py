@@ -61,7 +61,7 @@ INDUSTRIES = [
     "Broadcast Media", "Casinos & Gambling", "Chemicals", "Computer Software", 
     "Construction", "Consumer Products", "Defense & Aerospace", "Department Stores", 
     "eCommerce", "Electronics", "Energy / Utilities", "Financial Services", 
-    "Food Processing", "Gaming Software/Systems", "Government", "Hardware", 
+    "Food Processing", "Food & beverages", "Gaming Software/Systems", "Government", "Hardware", 
     "Health Insurance", "Higher Education", "Holding Companies", "Hospitals / Health Care", 
     "Insurance", "IT Services", "Legal Services", "Leisure", "Lodging", 
     "Logistics / Transportation", "Manufacturing - Durables", "Manufacturing - Non-Durables", 
