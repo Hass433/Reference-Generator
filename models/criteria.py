@@ -1,3 +1,5 @@
+#models/criteria.py
+
 from typing import Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, validator, root_validator
 
@@ -7,7 +9,7 @@ class NumericCriteria(BaseModel):
 
 class CustomerCriteria(BaseModel):
     account_owner_text: Optional[str] = Field(None, description="Account owner")
-    tenant: Optional[str] = Field(None, description="Name of the customer")
+    customer_name: Optional[str] = Field(None, description="Name of the customer")
 
     # Numeric fields with operator support
     invoice_volume: Optional[Union[int, NumericCriteria]] = Field(None, description="Invoice volume")

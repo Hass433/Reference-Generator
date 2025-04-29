@@ -1,3 +1,4 @@
+#utils/formatter.py
 from config.field_mapping import FIELD_MAPPING
 import pandas as pd
 
@@ -21,7 +22,7 @@ def format_results(results: list[dict]) -> str:
     
     for customer in results:
         formatted_data.append({
-            "Tenant": get_nested_value(customer, FIELD_MAPPING['tenant']),
+            "Customer Name": get_nested_value(customer, FIELD_MAPPING['customer_name']),
             "Account Owner": get_nested_value(customer, FIELD_MAPPING['account_owner']),
             "Industry": get_nested_value(customer, FIELD_MAPPING['industry']),
             "PO %": f"{get_nested_value(customer, FIELD_MAPPING['po_percentage'])}%",
@@ -53,7 +54,7 @@ def format_results_html(results: list[dict]) -> str:
     formatted_data = []
     for customer in results:
         formatted_data.append({
-            "Tenant": get_nested_value(customer, FIELD_MAPPING['tenant']),
+            "Customer Name": get_nested_value(customer, FIELD_MAPPING['customer_name']),
             "Account Owner": get_nested_value(customer, FIELD_MAPPING['account_owner']),
             "Industry": get_nested_value(customer, FIELD_MAPPING['industry']),
             "PO %": f"{get_nested_value(customer, FIELD_MAPPING['po_percentage'])}%",
@@ -83,7 +84,7 @@ def get_formatted_dataframe(results: list[dict]) -> pd.DataFrame:
     formatted_data = []
     for customer in results:
         formatted_data.append({
-            "Tenant": get_nested_value(customer, FIELD_MAPPING['tenant']),
+            "Customer Name": get_nested_value(customer, FIELD_MAPPING['customer_name']),
             "Account Owner": get_nested_value(customer, FIELD_MAPPING['account_owner']),
             "Industry": get_nested_value(customer, FIELD_MAPPING['industry']),
             "PO %": f"{get_nested_value(customer, FIELD_MAPPING['po_percentage'])}%",

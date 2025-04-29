@@ -1,3 +1,5 @@
+#services/query_builder.py
+
 from config.field_mapping import FIELD_MAPPING
 from models.criteria import CustomerCriteria,NumericCriteria  
 from utils.logger import logger, log_json 
@@ -18,8 +20,8 @@ def build_soql_query(criteria: CustomerCriteria) -> str:
     # Handle string fields
     if criteria.account_owner_text is not None:
         conditions.append(f"{FIELD_MAPPING['account_owner_text']} LIKE '%{criteria.account_owner_text}%'")
-    if criteria.tenant is not None:
-        conditions.append(f"{FIELD_MAPPING['tenant']} LIKE '%{criteria.tenant}%'")
+    if criteria.customer_name is not None:
+        conditions.append(f"{FIELD_MAPPING['customer_name']} LIKE '%{criteria.customer_name}%'")
     if criteria.industry is not None:
         conditions.append(f"{FIELD_MAPPING['industry']} LIKE '%{criteria.industry}%'")
     if criteria.erp_system:

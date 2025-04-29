@@ -86,7 +86,7 @@ def parse_criteria(prompt: str) -> CustomerCriteria:
     
     Parameters to extract:
     - account_owner_text: Account owner name
-    - tenant: Name of the customer
+    - customer_name: Name of the customer
     - invoice_volume: Invoice volume with comparison operator
     - po_percentage: Percentage of POs with comparison operator (0-100)
     - non_po_percentage: Percentage of non-PO invoices with comparison operator (0-100)
