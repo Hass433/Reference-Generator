@@ -1,5 +1,5 @@
 FIELD_MAPPING = {
-    "tenant": "tenant__c",
+    "customer_name": "Account__r.Name",
     "account_owner": "Account__r.Account_Owner_TEXT__c",
 
 
@@ -17,7 +17,6 @@ FIELD_MAPPING = {
 
     "is_latest": "IsLatest__c",
     "customer_type": "Account__r.Type"
-
 
 
 }
